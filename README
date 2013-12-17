@@ -1,0 +1,31 @@
+// GENERAL INFO //
+BADV-Project is a personal project which aims to simplify development for, Adventure (Novel/Text based) game that is quite common in Japan.
+This is a browser tool? for the developers to create ADV games. 
+The software it self is written JavaScript with jQuery library codes. It also includes jQuery plugin from various authors.
+It requires HTML5, CSS3, JavaScript with jQuery in order to run properly.
+- HTML5 and CSS3 are for, of course for the page's layout.
+- JavaScript with jQuery library are needed to run it.
+- Basically everything are in the browsers, you will just need to include the jQuery library and the core file into the HTML file to run.
+
+// SIMPLE HISTORY //
+This project had started from April, year 2012. The initial version(BADV) was scrapped / deprecated because of the late adapt-ion of jQuery and,
+the deprecation of Audio Data API.
+The second version(RE:BADV) was finished but was not released because of it's difficult usability.
+Now, the current on going third version(BADV-TRE) is a work in progress. I am working on it from scratch again with salvaged code from the previous version.
+BADV-TRE plans to be a simple, KIRIKIRI code compatible version.
+
+For more precise? information, please refer to the specified version's source code.
+
+// PROFILE? //
+Do mind that the author myself, KiddoKenshin is still an amateur programmer and it is still new to the OpenSource community.
+The code inside this project might look horrible and disgusting.
+Therefore, I would like to have feedback for it to improvement my code.
+OR, be a contributor for my project. Seriously, doing it alone takes a lot of time when you have a job in your real life.
+
+// FUTURE THOUGHTS? //
+This project is aiming for OpenSource distribution. Everyone can use, modify it the way you want.
+Will be submit a request for OSI Review around January, 2014.
+Plans to submit it as a MIT License software.
+
+// UPDATE //
+DEC 17, 2013 - Initial Statement

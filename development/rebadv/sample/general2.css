@@ -1,0 +1,400 @@
+/*
+ * General/Common CSS for reBADV-Project
+ * 
+ * @author KiddoKenshin
+ * @since 2012/04/01, 2013/01/21 
+ */
+
+/**
+ * Reserved area. Do not edit unless you know what you are doing.
+ */
+
+@CHARSET 'UTF-8';
+
+* {
+	padding: 0;
+	margin : 0;
+	
+	/* For Firefox */
+	-moz-user-select: none;
+	
+	/* For Webkit based Browsers */
+	-webkit-user-select: none;
+	-webkit-touch-callout: none;
+	cursor: default;
+}
+
+body {
+	/* FORCE Browsers to use the same font. No more Different font issues */
+	font-family: sans-serif !important;
+	background-color: #000000;
+}
+
+div#mainWindow {
+	position: relative;
+	width: auto;
+	height: auto;
+	
+	margin: 0px auto;
+}
+/*
+ * Reserved area end.
+ */
+
+/**
+ * Set default Screen size here.
+ */
+div#mainWindow div#main {
+	position: relative;
+	width: 1280px; /* EDITABLE */
+	height: 720px; /* EDITABLE */
+   
+	margin: 0px auto;
+	overflow: hidden;
+	
+	border: solid 2px #FFFAFA;
+}
+
+/**
+ * User defined CSS start.
+ */
+div#mainWindow div#main div#intronmenu,
+div#mainWindow div#main div#saveload,
+div#mainWindow div#main div#setting,
+div#mainWindow div#main div#cgscenemusic,
+div#mainWindow div#main div#ending,
+div#mainWindow div#main div#ingame,
+div#mainWindow div#main div#ingame div#background,
+div#mainWindow div#main div#ingame div#background div#back,
+div#mainWindow div#main div#ingame div#background div#front,
+div#mainWindow div#main div#ingame div#background div#characterArea,
+div#mainWindow div#main div#ingame div#contents {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    left: 0px;
+    top: 0px;
+}
+
+div#mainWindow div#main div#ingame div#background div#back,
+div#mainWindow div#main div#ingame div#background div#front {
+    background-size: 100%;
+    background-repeat: no-repeat;
+}
+
+div#mainWindow div#main div#ingame div#contents div#textboxArea {
+    position: absolute;
+    width: 1200px;
+    height: 240px;
+    
+    left: 40px;
+    bottom: 40px;
+}
+
+div#mainWindow div#main div#ingame div#contents div#textboxArea div#textbox {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    
+    left: 0px;
+    top: 0px;
+    
+    border: solid 1px #FFFAFA;
+    border-radius: 25px;
+}
+
+div#mainWindow div#main div#ingame div#contents div#textboxArea div#textbox div#blacktint {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    
+    left: 0px;
+    top: 0px;
+    
+    background-color: #000;
+    opacity: 0.75;
+    border-radius: 25px;
+}
+
+div#mainWindow div#main div#ingame div#contents div#textboxArea div#textbox div#namebox {
+    position: absolute;
+    width: 256px;
+    height: 32px;
+    
+    left: 240px;
+    top: 20px;
+    
+    /* border: solid 1px #FFFAFA; */
+    /* text-align: center; */
+    
+    line-height: 32px;
+    color: #FFF;
+    text-shadow: 1px 1px #000;
+}
+
+div#mainWindow div#main div#ingame div#contents div#textboxArea div#textbox div#hidebutton {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    
+    right: 20px;
+    top: 20px;
+    
+    border: solid 1px #FFFAFA;
+}
+
+div#mainWindow div#main div#ingame div#contents div#textboxArea div#charaWindow {
+    position: absolute;
+    /*
+    width: 240px;
+    height: 240px;
+    
+    left: 0px;
+    top: 0px;
+    */
+    width: 200px;
+    height: 200px;
+    
+    left: 20px;
+    top: 20px;
+    
+    overflow: hidden;
+}
+
+div#mainWindow div#main div#ingame div#contents div#textboxArea div#text {
+    position: absolute;
+    width: 940px;
+    height: 160px;
+    
+    right: 20px;
+    top: 60px;
+    
+    color: #FFFAFA;
+    text-shadow: 2px 2px #101010;
+}
+
+div#mainWindow div#main div#ingame div#contents div#textboxArea div#textbutton {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    
+    right: 20px;
+    bottom: 20px;
+    
+    background-color: #FFFAFA;
+    opacity: 0;
+}
+
+div#mainWindow div#main div#loadContainer {
+    position: absolute;
+    width: 256px;
+    height: 256px;
+    
+    left: 512px;
+    top: 232px;
+}
+
+div#mainWindow div#main div#loadContainer div#swinger {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    
+    left: 124px;
+    top: 124px;
+    
+    animation: loadloop 1s;
+    -webkit-animation: loadloop 1s;
+
+    animation-iteration-count: infinite;
+    -webkit-animation-iteration-count: infinite;
+    
+    animation-timing-function: ease;
+    -webkit-animation-timing-function: ease;
+}
+@keyframes loadloop {
+    0% { transform: rotate(0deg); }
+    0.1% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+@-webkit-keyframes loadloop {
+    0% { -webkit-transform: rotate(0deg); }
+    0.1% { -webkit-transform: rotate(0deg); }
+    100% { -webkit-transform: rotate(360deg); }
+}
+
+div#mainWindow div#main div#loadContainer div#swinger div#inner {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    
+    left: 0px;
+    top: 0px;
+    
+    background-color: #FFFAFA;
+    border-radius: 50%;
+}
+
+div#mainWindow div#main div#loadContainer div#indicatorleft,
+div#mainWindow div#main div#loadContainer div#indicatorright {
+    position: absolute;
+    width: 228px;
+    height: 228px;
+    
+    left: 14px;
+    top: 14px;
+    
+    background-color: #DADADA;
+    border-radius: 50%;
+    
+    clip: rect(0px, 114px, 228px, 0px);
+}
+
+div#mainWindow div#main div#loadContainer div#indicatorright {
+    clip: rect(0px, 228px, 228px, 114px);
+}
+
+div#mainWindow div#main div#loadContainer div#indicatorright.hidemode {
+    width: 230px !important;
+    height: 230px !important;
+    
+    left: 13px !important;
+    top: 13px !important;
+    
+    background-color: #000 !important;
+    
+    clip: rect(0px, 230px, 230px, 115px) !important;
+}
+
+div#mainWindow div#main div#loadContainer div#hider {
+    position: absolute;
+    width: 212px;
+    height: 212px;
+    
+    left: 22px;
+    top: 22px;
+    
+    background-color: #000000;
+    border-radius: 50%;
+}
+
+div#mainWindow div#main div#loadContainer div#info {
+    position: absolute;
+    width: 100%;
+    height: 20px;
+    
+    left: 0px;
+    top: 118px;
+    
+    font-size: 20px;
+    line-height: 20px;
+    text-align: center;
+    color: #FFFAFA;
+    
+    animation: glow 2s;
+    -webkit-animation: glow 2s;
+
+    animation-iteration-count: infinite;
+    -webkit-animation-iteration-count: infinite;
+    
+    animation-timing-function: ease-in-out;
+    -webkit-animation-timing-function: ease-in-out;
+}
+@keyframes glow {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+@-webkit-keyframes glow {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+div#copyright {
+    position: absolute;
+    height: 20px;
+    line-height: 20px;
+    right: 4px;
+    bottom: 4px;
+    color: #FFF;
+}
+
+div#copyright a {
+    cursor: default;
+    color: #FFF;
+    text-decoration: none;
+}
+
+div#copyright a:hover {
+    text-decoration: underline;
+}
+
+div#backlogger {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    
+    left: 0px;
+    top: 0px;
+    overflow: auto;
+    
+    /*
+    background-color: #000;
+    opacity: 0.75;
+    /*/
+}
+
+div#backlogger div#blacktint {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    
+    background-color: #000;
+    opacity: 0.75;
+}
+
+div#backlogger div#messages {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+} 
+
+div#backlogger div#messages div {
+    float: left;
+    width: 100%;
+    /* height: 88.5px; */
+    
+    color: #FFFAFA;
+    text-shadow: 1px 1px #000;
+    font-size: 20px;
+    line-height: 22.125px;
+}
+
+div#mia {
+    position: relative;
+    /*
+    width: 360px;
+    height: 360px;
+    */
+    background-repeat: no-repeat;
+    
+    /*
+    transform-origin: 0px 0px;
+    transform: scale(0.557);
+    -webkit-transform-origin: 0px 0px;
+    -webkit-transform: scale(0.557);
+    */
+    
+    width: 200px;
+    height: 200px;
+    background-size: 100%;
+}
+
+div#mia div#eye {
+    position: absolute;
+    width: 175px;
+    height: 78px;
+    left: 97px;
+    top: 231px;
+    background-repeat: no-repeat;
+}

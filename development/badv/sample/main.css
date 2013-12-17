@@ -1,0 +1,33 @@
+/**
+ * 	User defined CSS here
+ */
+
+div#mia {
+	position: relative;
+	width: 200px;
+	height: 200px;
+	background-repeat: no-repeat;
+	background-image: url(../../commonresource/images/mia_base_resized.png);
+}
+
+div#mia div#eye {
+	position: absolute;
+	width: 97px;
+	height: 43px;
+	left: 54px;
+	top: 128.5px;
+	background-repeat: no-repeat;
+	background-image: url(../../commonresource/images/mia_eye_resized.jpg);
+}
+
+div#mia div#eye.pos1 {
+	background-position: 0 0px;
+}
+
+div#mia div#eye.pos2 {
+	background-position: 0 -43px;
+}
+
+div#mia div#eye.pos3 {
+	background-position: 0 -86px;
+}

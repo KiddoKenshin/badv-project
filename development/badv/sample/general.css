@@ -1,0 +1,234 @@
+/*
+ * General/Common CSS for BADV-Project
+ * 
+ * @author KiddoKenshin
+ * @since 2012/04/01 
+ */
+* {
+	padding: 0;
+	margin : 0;
+	
+	/* For Firefox */
+	-moz-user-select: none;
+	
+	/* For Webkit based Browsers */
+	-webkit-user-select: none;
+	-webkit-touch-callout: none;
+	cursor: default;
+}
+
+body {
+	/* FORCE Browsers to use the same font. No more Different font issues */
+	font-family: sans-serif !important;
+	background-color: #000000;
+}
+
+div#main {
+	margin: 25px auto;
+	width: 960px;
+	height: 540px;
+	background-color: #FFFFFF;
+	overflow: hidden;
+	
+	position: relative;
+}
+
+div#background {
+	width: 100%;
+	height: 100%;
+	left: 0px;
+	top: 0px;
+	position: absolute;
+}
+
+div#background div {
+	position: absolute;
+	left: 0px;
+	top: 0px;
+}
+
+div#contents {
+	width: 100%;
+	height: 100%;
+	position: relative;
+}
+
+div#headerArea {
+	width: 960px;
+	height: 48px;
+	position: relative;
+	z-index: 99;
+	
+	top: -32px;
+	
+	/* For Firefox */
+	-moz-transition: top 0.25s;
+	-moz-transition-timing-function: ease-in-out;
+	
+	/* For Webkit based Browsers */
+	-webkit-transition: top 0.25s;
+	-webkit-transition-timing-function: ease-in-out;
+	
+}
+
+div#headerArea:hover {
+	top: 0px;
+}
+
+div#headerArea .headerMenu {
+	position: relative;
+	width: 960px;
+	height: 32px;
+	background-color: #000000;
+	opacity: 0.25;
+}
+
+div#copyRight {
+	position: absolute;
+	bottom: 12px;
+	right: 12px;
+	white-space: nowrap;
+}
+
+div#textAreaContainer {
+	position: absolute;
+	width: 900px;
+	height: 230px;
+	left: 30px;
+	
+	bottom: 30px;
+}
+
+div#textArea {
+	position: absolute;
+	width: 870px;
+	height: 200px;
+	
+	padding: 15px;
+}
+
+div#textArea-background {
+	position: absolute;
+	width: 896px;
+	height: 226px;
+	background-color: #000000;
+	opacity: 0.5;
+	
+	border: 2px solid #999999;
+	border-radius: 10px;
+	box-shadow: 0px 0px 3px 0px #CCCCCC;
+}
+
+div#textArea .characterIcon {
+	float: left;
+	width: 0%;
+	height: 200px;
+	
+	background-color: #F0F0F0;
+}
+
+div#textArea .textDisplay {
+	float: left;
+	width: 100%;
+	height: 200px;
+	cursor: default;
+	opacity: 1.0;
+	color: #FFFFFF;
+	
+	line-height: 32px;
+}
+
+div#simpleButton {
+	position: relative;
+	width: 20px;
+	height: 20px;
+	left: 850px;
+	top: 180px;
+	background-color: #FFFFFF;
+	opacity: 0;
+}
+
+div#simpleButton.animate {
+	-moz-animation: animateButton 1s infinite linear;
+	-webkit-animation: animateButton 1s infinite linear;
+}
+@-moz-keyframes animateButton {
+	0% { opacity: 0; }
+	50% { opacity: 1; }
+	100% { opacity: 0; }
+}
+@-webkit-keyframes animateButton {
+	0% { opacity: 0; }
+	50% { opacity: 1; }
+	100% { opacity: 0; }
+}
+
+/* Image Loader References : http://www.alessioatzeni.com/blog/css3-loading-animation-loop/ */
+div#loader {
+	position: absolute;
+	width: 130px;
+	height: 130px;
+	left: 415px;
+	top: 190px;
+}
+
+div#loadertext {
+	position: relative;
+	top: 72px;
+	
+	text-align: center;
+	vertical-align: middle;
+	
+	color: #FFFFFF;
+	font-size: 10px;
+}
+
+.circle {
+	background-color: rgba(0, 0, 0, 0);
+	border:5px solid rgba(200, 200, 200, 0.9);
+	opacity: 0.9;
+	border-right: 5px solid rgba(0, 0, 0, 0);
+	border-left: 5px solid rgba(0, 0, 0, 0);
+	border-radius: 120px;
+	box-shadow: 0 0 35px #999999;
+	width: 120px;
+	height: 120px;
+	-moz-animation: spinPulse 1s infinite linear;
+	-webkit-animation: spinPulse 1s infinite linear;
+}
+.circle1 {
+	background-color: rgba(0, 0, 0, 0);
+	border: 5px solid rgba(200, 200, 200, 0.9);
+	opacity: 1;
+	border-left: 5px solid rgba(0, 0, 0, 0);
+	border-right: 5px solid rgba(0, 0, 0, 0);
+	border-radius: 50px;
+	box-shadow: 0 0 15px #999999; 
+	width: 90px;
+	height: 90px;
+	margin: 0 auto;
+	position: relative;
+	top: 10px;
+	-moz-animation: spinoffPulse 1s infinite linear;
+	-webkit-animation: spinoffPulse 1s infinite linear;
+}
+@-moz-keyframes spinPulse {
+	0% { -moz-transform: rotate(-90deg); opacity: 0; box-shadow: 0 0 1px #FFFFFF; }
+	50% { -moz-transform: rotate(-450deg); opacity: 1; }
+	100% { -moz-transform: rotate(-810deg); opacity: 0; }
+}
+@-moz-keyframes spinoffPulse {
+	0% { -moz-transform: rotate(0deg); }
+	50% { -moz-transform: rotate(720deg); }
+	100% { -moz-transform: rotate(1440deg); }
+}
+@-webkit-keyframes spinPulse {
+	0% { -webkit-transform: rotate(-90deg); opacity: 0; box-shadow: 0 0 1px #FFFFFF; }
+	50% { -webkit-transform: rotate(-450deg); opacity: 1; }
+	100% { -webkit-transform: rotate(-810deg); opacity: 0; }
+}
+@-webkit-keyframes spinoffPulse {
+	0% { -webkit-transform: rotate(0deg); }
+	50% { -webkit-transform: rotate(720deg); }
+	100% { -webkit-transform: rotate(1440deg); }
+}
