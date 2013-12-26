@@ -42,6 +42,8 @@ BADV.config = {
 	
 	_forceWidth : null,
 	_forceHeight : null,
+	
+	_loadingMethod : 'default', // default(all in once), precise(one by one)
 };
 
 // TODO: Combine switch and config into one option?
@@ -141,7 +143,432 @@ BADV.startRescaler = function() {
 	
 };
 
+// Android detector
+BADV.androidVer = -1;
+BADV.getAndroidVersion = function() {
+	if (BADV.androidVer === -1) {
+		var ua = navigator.userAgent;
+		var strings = ua.split('; ');
+		var totalStrings = strings.length;
+		BADV.androidVer = 0;
+		for (var i = 0; i < totalStrings; i++) {
+			if (strings[i].match(/(android)|(Android)/i)) {
+				var temp = strings[i].split(' ');
+				BADV.androidVer = parseFloat(temp[1]);
+				break;
+			}
+		}
+	}
+	
+	return BADV.androidVer;
+};
 
+// iOS detector
+BADV.iOSVersion = -1;
+BADV.getiOSVersion = function() {
+	if (BADV.iOSVersion === -1) {
+		var agent = window.navigator.userAgent,
+		start = agent.indexOf( 'OS ' );
+		
+		BADV.iOSVersion = 0;
+		if ((agent.indexOf('iPhone') > -1 || agent.indexOf('iPad') > -1) && start > -1) {
+			BADV.iOSVersion = parseFloat(agent.substr(start + 3, 3).replace('_', '.'));
+		}
+	}
+	
+	return BADV.iOSVersion;
+};
+
+// Mobile Device Detector
+BADV.clientDevice = null;
+BADV.isMobile = function() {
+	if (BADV.clientDevice === null) {
+		if (BADV.getAndroidVersion() === 0 && BADV.getiOSVersion() === 0) {
+			BADV.clientDevice = 'pc';
+		} else {
+			BADV.clientDevice = 'mobile';
+		}
+	}
+	
+	return BADV.clientDevice === 'mobile';
+};
+
+BADV.consoleLogger = function(input) {
+	if (this.switches._debugMode && typeof(console) != 'undefined') {
+		console.log(input);
+	}
+};
+
+// AUDIO RELATED //
+BADV.audio = {
+	_audioContext : null,
+	_masterVolume : 1,
+	_masterVolumeControl : null,
+	_bgmVolume : 1,
+	_bgmVolumeControl : null,
+	_sfxVolume : 1,
+	_sfxVolumeControl : null,
+	_voiceVolume : 1,
+	_voiceVolumeControl : null,
+	
+	_createAudioContext : function() {
+		if (typeof(AudioContext) != 'undefined') {
+			return new AudioContext();
+		} else if (typeof(webkitAudioContext) != 'undefined') {
+			return new webkitAudioContext();
+		} else if (typeof(mozAudioContext) != 'undefined') {
+			return new mozAudioContext();
+		} else {
+			// Web Audio API is not available
+			BADV.consoleLogger('Web Audio API is not available');
+			return false;
+		}
+	},
+	
+	// BGM
+	_bgmOutput : null, // To detect playing state
+	_bgmOutputVolume : null, // For Crossfade FX
+	
+	// SFX (Not needed due to single playback)
+	
+	_voicePlaystateChecker : null, // For setInterval...
+	_voiceOutput : null, // To detect playing state
+	// _voiceOutputVolume : null, // Might not needed 
+	
+	_initAudio : function() {
+		this._audioContext = this._createAudioContext();
+		if (this._audioContext !== false) {
+			var aContext = this._audioContext;
+			this._masterVolumeControl = aContext.createGain();
+			this._masterVolumeControl.gain.value = this._masterVolume;
+			
+			this._bgmVolumeControl = aContext.createGain();
+			this._bgmVolumeControl.gain.value = this._bgmVolume;
+			this._bgmVolumeControl.connect(this._masterVolumeControl);
+			
+			this._sfxVolumeControl = aContext.createGain();
+			this._sfxVolumeControl.gain.value = this._sfxVolume;
+			this._sfxVolumeControl.connect(this._masterVolumeControl);
+			
+			this._voiceVolumeControl = aContext.createGain();
+			this._voiceVolumeControl.gain.value = this._voiceVolume;
+			this._voiceVolumeControl.connect(this._masterVolumeControl);
+			
+			this._masterVolumeControl.connect(aContext.destination);
+		}
+	},
+	
+	_list : {},
+	_queues : [], // For precise mode only
+	_currentQueue : -1, // For precise mode only
+	
+	_totalAudio : 0,
+	_audioLoaded : 0,
+	_preloadedAudios : {},
+	_loadNext : function() {
+		if ((++this._currentQueue) == this._queues.length) {
+			// All loaded.
+			BADV.consoleLogger('All audio loaded.');
+			return;
+		}
+		var audioId = this._queues[this._currentQueue];
+		var audioUrl = this._list[audioId];
+		this._loadAudio(audioId, audioUrl);
+	},
+	_loadAudio : function(audioId, audioUrl, toMono) {
+		
+		this._totalAudio++;
+		if (this._audioContext === false) {
+			// No Web Audio API. No audio support :(
+			this._totalAudio--;
+			return;
+		}
+		
+		if (audioUrl == undefined) {
+			throw new Error('AudioUrl not defined.');
+		}
+		
+		if (toMono == undefined) {
+			toMono = false;
+		}
+		
+		var aContext = this._audioContext;
+		var preciseLoad = (BADV.config._loadingMethod == 'precise');
+		
+		var request = new XMLHttpRequest();
+		request.open('GET', audioUrl, true);
+		request.responseType = 'arraybuffer';
+		request.onload = function() {
+			
+			aContext.decodeAudioData(request.response, function(buffer) {
+				this._preloadedAudios[audioId] = buffer;
+				BADV.consoleLogger(audioFileUrl + ' loaded!');
+				this._audioLoaded++;
+				
+				if (preciseLoad) {
+					this._loadNext();
+				}
+				
+			}, function() {
+				// Error Callback
+				this._totalAudio--;
+				BADV.consoleLogger(audioFileUrl + ' error! (Decode)');
+				
+				if (preciseLoad) {
+					this._loadNext();
+				}
+				
+			});
+		};
+		
+		request.onerror = function() {
+			this._totalAudio--;
+			BADV.consoleLogger(audioFileUrl + ' error! (Request)');
+			if (preciseLoad) {
+				this._loadNext();
+			}
+		};
+		
+		request.send();
+	},
+	
+};
+
+BADV.audioLoader = function() {
+	var audio = BADV.audio;
+	if (audio._audioContext == null) {
+		audio._initAudio();
+	}
+	
+	var preciseLoad = (BADV.config._loadingMethod == 'precise');
+	if (preciseLoad) {
+		// Reset and populate queues from list
+		delete audio._queues;
+		audio._queues = [];
+		audio._currentQueue = -1;
+		for (objectKey in audio._list) {
+			audio._queues.push(objectKey);
+		}
+		audio._loadNext();
+	} else {
+		for (objectKey in audio._list) {
+			audio._loadAudio(objectKey, audio._list[objectKey]);
+		}
+	}
+};
+
+BADV.playBGM = function(audioData, forcePlay) {
+	var audio = BADV.audio;
+	if (audio._audioContext == false) {
+		// No audio, no life.
+		return;
+	}
+	
+	if (audioData == undefined) {
+		throw new Error('No Audio data');
+	}
+	
+	if (forcePlay == undefined) {
+		forcePlay = false;
+	}
+	
+	var startVolume = 1;
+	if (audio._bgmOutput != null && !forcePlay) {
+		startVolume = 0;
+	}
+	
+	var BGMOutput = audio._audioContext.createBufferSource();
+	BGMOutput.buffer = audioData;
+	BGMOutput.loop = true;
+	
+	var thisVolume = audio._audioContext.createGain();
+	thisVolume.gain.value = startVolume;
+	thisVolume.connect(audio._bgmVolumeControl);
+	
+	// BGMOutput.connect(audio._bgmVolumeControl);
+	BGMOutput.connect(thisVolume);
+	BGMOutput.start(0);
+	
+	if (audio._bgmOutput != null && forcePlay) {
+		// Stop previous track. No crossfade
+		audio._bgmOutput.stop();
+		delete audio._bgmOutput, audio._bgmOutput;
+		audio._bgmOutput = null;
+		audio._bgmOutputVolume = null;
+		
+		audio._bgmOutput = BGMOutput;
+		audio._bgmOutputVolume = thisVolume;
+	} else if (audio._bgmOutput != null && !forcePlay) {
+		// 1 second Crossfade
+		// TODO: What happened if skipped?
+		var amount = (1 / Math.round(1000 / BADV.config._intervalPerFrame)).toFixed(5);
+		var crossFade = setInterval(function() {
+			audio._bgmOutputVolume -= amount;
+			thisVolume.gain.value += amount;
+			
+			if (thisVolume.gain.value >= 1.0) {
+				clearInterval(crossFade);
+				
+				audio._bgmOutputVolume = 0;
+				audio._bgmOutput.stop();
+				delete audio._bgmOutput, audio._bgmOutput;
+				audio._bgmOutput = null;
+				audio._bgmOutputVolume = null;
+				
+				thisVolume.gain.value = 1;
+				
+				audio._bgmOutput = BGMOutput;
+				audio._bgmOutputVolume = thisVolume;
+			}
+		}, BADV.config._intervalPerFrame);
+		
+	} else {
+		audio._bgmOutput = BGMOutput;
+		audio._bgmOutputVolume = thisVolume;
+	}
+};
+
+BADV.stopBGM = function(noFade) {
+	var audio = BADV.audio;
+	if (audio._audioContext == false) {
+		// No audio, no life.
+		return;
+	}
+	
+	if (noFade == undefined) {
+		noFade = false;
+	}
+	
+	if (!noFade) {
+		// 1 second fade
+		var amount = (1 / Math.round(1000 / BADV.config._intervalPerFrame)).toFixed(5);
+		var fade = setInterval(function() {
+			audio._bgmOutputVolume -= amount;
+			
+			if (audio._bgmOutputVolume <= 0) {
+				clearInterval(crossFade);
+				
+				audio._bgmOutputVolume = 0;
+				audio._bgmOutput.stop();
+				
+				delete audio._bgmOutput, audio._bgmOutput;
+				audio._bgmOutput = null;
+				audio._bgmOutputVolume = null;
+			}
+		}, BADV.config._intervalPerFrame);
+	} else {
+		audio._bgmOutput.stop();
+		delete audio._bgmOutput, audio._bgmOutput;
+		audio._bgmOutput = null;
+		audio._bgmOutputVolume = null;
+	}
+};
+
+BADV.playVoice = function(audioData) {
+	var audio = BADV.audio;
+	if (audio._audioContext == false) {
+		// No audio, no life.
+		return;
+	}
+	
+	if (audioData == undefined) {
+		throw new Error('No Audio data');
+	}
+	
+	if (audio._voiceOutput != null) {
+		audio._voiceOutput.stop(0);
+		delete audio._voiceOutput;
+		audio._voiceOutput = null;
+	}
+	
+	var voiceOutput = audio._audioContext.createBufferSource();
+	voiceOutput.buffer = audioData;
+	
+	voiceOutput.connect(audio._bgmVolumeControl);
+	voiceOutput.start(0);
+	
+	audio._voiceOutput = voiceOutput;
+	
+	// Observe playstate...
+	// Reference : UNSCHEDULED_STATE (0), SCHEDULED_STATE (1), PLAYING_STATE (2), or FINISHED_STATE (3)
+	audio._voicePlaystateChecker = setInterval(function() {
+		if (audio._voiceOutput.playbackState === audio._voiceOutput.FINISHED_STATE) {
+			clearInterval(audio._voicePlaystateChecker);
+			try {
+				audio._voiceOutput.stop(0);
+			} catch (Exception) {
+				console.log('Voice completed or not exits. (Interval)');
+			}
+			delete audio._voiceOutput;
+			audio._voiceOutput = null;
+		}
+	}, BADV.config._intervalPerFrame);
+	
+	// Some browser might not implemented, yet
+	audio._voiceOutput.onended = function() {
+		try {
+			audio._voiceOutput.stop(0);
+		} catch (Exception) {
+			console.log('Voice completed or not exits. (Onended)');
+		}
+		delete audio._voiceOutput;
+		audio._voiceOutput = null;
+	};
+	
+};
+
+BADV.playSFX = function(audioData) {
+	var audio = BADV.audio;
+	if (audio._audioContext == false) {
+		// No audio, no life.
+		return;
+	}
+	
+	if (audioData == undefined) {
+		throw new Error('No Audio data');
+	}
+	
+	var sfxOutput = audio._audioContext.createBufferSource();
+	sfxOutput.buffer = audioData;
+	
+	sfxOutput.connect(audio._bgmVolumeControl);
+	sfxOutput.start(0);
+	
+	// Observe playstate...
+	// Reference : UNSCHEDULED_STATE (0), SCHEDULED_STATE (1), PLAYING_STATE (2), or FINISHED_STATE (3)
+	var sfxCheck = setInterval(function() {
+		if (sfxOutput.playbackState === sfxOutput.FINISHED_STATE) {
+			clearInterval(sfxCheck);
+			try {
+				sfxOutput.stop(0);
+			} catch (Exception) {
+				console.log('SFX completed or not exits. (Interval)');
+			}
+			delete sfxOutput;
+		}
+	}, BADV.config._intervalPerFrame);
+	
+	// Some browser might not implemented, yet
+	sfxOutput.onended = function() {
+		try {
+			sfxOutput.stop(0);
+		} catch (Exception) {
+			console.log('SFX completed or not exits. (Onended)');
+		}
+		delete sfxOutput;
+	};
+};
+
+BADV.image = {
+	_list : {},
+	_loadImage : function() {
+		
+	},
+	_loadNextImage : function() {
+	
+	},
+	_preloadedImages : {},
+};
 
 
 // PLUGIN AREA //
