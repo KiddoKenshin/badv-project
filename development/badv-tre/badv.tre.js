@@ -44,6 +44,7 @@ BADV.config = {
 	_forceHeight : null,
 	
 	_loadingMethod : 'default', // default(all in once), precise(one by one)
+	_useBase64 : false, // Use Base64 images (DataUri)
 };
 
 // TODO: Combine switch and config into one option?
@@ -168,7 +169,7 @@ BADV.iOSVersion = -1;
 BADV.getiOSVersion = function() {
 	if (BADV.iOSVersion === -1) {
 		var agent = window.navigator.userAgent,
-		start = agent.indexOf( 'OS ' );
+		start = agent.indexOf('OS ');
 		
 		BADV.iOSVersion = 0;
 		if ((agent.indexOf('iPhone') > -1 || agent.indexOf('iPad') > -1) && start > -1) {
@@ -177,6 +178,10 @@ BADV.getiOSVersion = function() {
 	}
 	
 	return BADV.iOSVersion;
+};
+
+BADV.isWebkit = function() {
+	return window.navigator.userAgent.match(/(webkit)|(Webkit)|(WebKit)/i);
 };
 
 // Mobile Device Detector
@@ -231,9 +236,9 @@ BADV.audio = {
 	
 	// SFX (Not needed due to single playback)
 	
+	// VOICE
 	_voicePlaystateChecker : null, // For setInterval...
 	_voiceOutput : null, // To detect playing state
-	// _voiceOutputVolume : null, // Might not needed 
 	
 	_initAudio : function() {
 		this._audioContext = this._createAudioContext();
@@ -277,7 +282,6 @@ BADV.audio = {
 	},
 	_loadAudio : function(audioId, audioUrl, toMono) {
 		
-		this._totalAudio++;
 		if (this._audioContext === false) {
 			// No Web Audio API. No audio support :(
 			this._totalAudio--;
@@ -340,6 +344,12 @@ BADV.audioLoader = function() {
 		audio._initAudio();
 	}
 	
+	if (audio._audioContext === false) {
+		// No Web Audio API. No audio support :(
+		BADV.consoleLogger('Web Audio API not available.');
+		return;
+	}
+	
 	var preciseLoad = (BADV.config._loadingMethod == 'precise');
 	if (preciseLoad) {
 		// Reset and populate queues from list
@@ -347,11 +357,13 @@ BADV.audioLoader = function() {
 		audio._queues = [];
 		audio._currentQueue = -1;
 		for (objectKey in audio._list) {
+			audio._totalAudio++;
 			audio._queues.push(objectKey);
 		}
 		audio._loadNext();
 	} else {
 		for (objectKey in audio._list) {
+			audio._totalAudio++;
 			audio._loadAudio(objectKey, audio._list[objectKey]);
 		}
 	}
@@ -476,6 +488,7 @@ BADV.playVoice = function(audioData) {
 	}
 	
 	if (audio._voiceOutput != null) {
+		clearInterval(audio._voicePlaystateChecker);
 		audio._voiceOutput.stop(0);
 		delete audio._voiceOutput;
 		audio._voiceOutput = null;
@@ -490,30 +503,34 @@ BADV.playVoice = function(audioData) {
 	audio._voiceOutput = voiceOutput;
 	
 	// Observe playstate...
-	// Reference : UNSCHEDULED_STATE (0), SCHEDULED_STATE (1), PLAYING_STATE (2), or FINISHED_STATE (3)
-	audio._voicePlaystateChecker = setInterval(function() {
-		if (audio._voiceOutput.playbackState === audio._voiceOutput.FINISHED_STATE) {
-			clearInterval(audio._voicePlaystateChecker);
+	if (typeof(audio._voiceOutput.onended) === 'object' && !BADV.isWebkit()) {
+		// Use onended for browser that support it.
+		// Current support : Firefox works fine, Chrome (even Canary) is still buggy
+		audio._voiceOutput.onended = function() {
 			try {
 				audio._voiceOutput.stop(0);
 			} catch (Exception) {
-				console.log('Voice completed or not exits. (Interval)');
+				console.log('Voice completed or not exits. (Onended)');
 			}
 			delete audio._voiceOutput;
 			audio._voiceOutput = null;
-		}
-	}, BADV.config._intervalPerFrame);
-	
-	// Some browser might not implemented, yet
-	audio._voiceOutput.onended = function() {
-		try {
-			audio._voiceOutput.stop(0);
-		} catch (Exception) {
-			console.log('Voice completed or not exits. (Onended)');
-		}
-		delete audio._voiceOutput;
-		audio._voiceOutput = null;
-	};
+		};
+	} else {
+		// The legacy support for browsers that do not have onended feature
+		// Reference : UNSCHEDULED_STATE (0), SCHEDULED_STATE (1), PLAYING_STATE (2), or FINISHED_STATE (3)
+		audio._voicePlaystateChecker = setInterval(function() {
+			if (audio._voiceOutput.playbackState === audio._voiceOutput.FINISHED_STATE) {
+				clearInterval(audio._voicePlaystateChecker);
+				try {
+					audio._voiceOutput.stop(0);
+				} catch (Exception) {
+					console.log('Voice completed or not exits. (Interval)');
+				}
+				delete audio._voiceOutput;
+				audio._voiceOutput = null;
+			}
+		}, BADV.config._intervalPerFrame);
+	}
 	
 };
 
@@ -535,41 +552,291 @@ BADV.playSFX = function(audioData) {
 	sfxOutput.start(0);
 	
 	// Observe playstate...
-	// Reference : UNSCHEDULED_STATE (0), SCHEDULED_STATE (1), PLAYING_STATE (2), or FINISHED_STATE (3)
-	var sfxCheck = setInterval(function() {
-		if (sfxOutput.playbackState === sfxOutput.FINISHED_STATE) {
-			clearInterval(sfxCheck);
+	if (typeof(sfxOutput.onended) === 'object' && !BADV.isWebkit()) {
+		// Use onended for browser that support it.
+		// Current support : Firefox works fine, Chrome (even Canary) is still buggy
+		sfxOutput.onended = function() {
 			try {
 				sfxOutput.stop(0);
 			} catch (Exception) {
-				console.log('SFX completed or not exits. (Interval)');
+				console.log('SFX completed or not exits. (Onended)');
 			}
 			delete sfxOutput;
-		}
-	}, BADV.config._intervalPerFrame);
+		};
+	} else {
+		// The legacy support for browsers that do not have onended feature
+		// Reference : UNSCHEDULED_STATE (0), SCHEDULED_STATE (1), PLAYING_STATE (2), or FINISHED_STATE (3)
+		var sfxCheck = setInterval(function() {
+			if (sfxOutput.playbackState === sfxOutput.FINISHED_STATE) {
+				clearInterval(sfxCheck);
+				try {
+					sfxOutput.stop(0);
+				} catch (Exception) {
+					console.log('SFX completed or not exits. (Interval)');
+				}
+				delete sfxOutput;
+			}
+		}, BADV.config._intervalPerFrame);
+	}
 	
-	// Some browser might not implemented, yet
-	sfxOutput.onended = function() {
-		try {
-			sfxOutput.stop(0);
-		} catch (Exception) {
-			console.log('SFX completed or not exits. (Onended)');
-		}
-		delete sfxOutput;
-	};
 };
 
+// IMAGE RELATED //
 BADV.image = {
 	_list : {},
-	_loadImage : function() {
+	_queues : [], // For precise mode only
+	_currentQueue : -1, // For precise mode only
+	
+	_totalImage : 0,
+	_imageLoaded : 0,
+	_preloadedImages : {},
+	_loadNext : function() {
 		
 	},
-	_loadNextImage : function() {
-	
+	_loadImage : function(imageId, imageUrl) {
+		var preciseLoad = (BADV.config._loadingMethod == 'precise');
+		$('<img />').error(function () {
+			// Loader error handler
+			BADV.consoleLogger('error occurred while loading ' + imageUrl + ' .');
+			this._totalImage--;
+			if (preciseLoad) {
+				this._loadNext();
+			}
+		}).attr('src', imageUrl).load(function () {
+			// Image loaded call back
+			this._imageLoaded++;
+			BADV.consoleLogger('image loaded:  ' + imageUrl + ' .');
+			this._preloadedImages[imageId] = imageUrl;
+			if (preciseLoad) {
+				this._loadNext();
+			}
+		});
 	},
-	_preloadedImages : {},
+	_loadImageToBase64 : function(imageId, imageUrl) {
+		// Referred : http://hi0a.com/demo/img-base64-datauri/
+		
+		var preciseLoad = (BADV.config._loadingMethod == 'precise');
+		var request = new XMLHttpRequest();
+		request.open('GET', imageUrl, true);
+		// request.responseType = 'text';
+		request.overrideMimeType('text/plain; charset=x-user-defined');
+		
+		request.onload = function() {
+			var bytes = [];
+			for (i = 0; i < request.responseText.length; i++){
+				bytes[i] = request.responseText.charCodeAt(i) & 0xff;
+			}
+			var binary = String.fromCharCode.apply(String, bytes);
+			var convert64 = window.btoa(binary);
+			var fileHeader = binary.substring(0,9);
+			
+			function checkExtension(header) {
+				if (header.match(/^\x89PNG/)) {
+					return 'png';
+				} else if (header.match(/^BM/)){
+					return 'bmp';
+				} else if (header.match(/^GIF87a/) || header.match(/^GIF89a/)) {
+					return 'gif';
+				} else if (header.match(/^\xff\xd8/)) {
+					return 'jpeg';
+				} else {
+					return false;
+				}
+			}
+			
+			var ext = checkExtension(fileHeader);
+			this._preloadedImages[imageId] = ('data:image/' + ext + ';base64,' + convert64);
+			if (preciseLoad) {
+				this._loadNext();
+			}
+		};
+		
+		request.onerror = function() {
+			BADV.consoleLogger('error occurred while loading ' + imageUrl + ' . (B64)');
+			if (preciseLoad) {
+				this._loadNext();
+			}
+		};
+		
+		request.send();
+	}
 };
 
+BADV.imageLoader = function() {
+	var image = BADV.image;
+	var preciseLoad = (BADV.config._loadingMethod == 'precise');
+	var useBase64 = BADV.config._useBase64;
+	if (preciseLoad) {
+		// Reset and populate queues from list
+		delete image._queues;
+		image._queues = [];
+		image._currentQueue = -1;
+		for (objectKey in image._list) {
+			image._totalImage++;
+			image._queues.push(objectKey);
+		}
+		image._loadNext();
+	} else {
+		for (objectKey in image._list) {
+			image._totalImage++;
+			if (useBase64) {
+				image._loadImageToBase64(objectKey, image._list[objectKey]);
+			} else {
+				image._loadImage(objectKey, image._list[objectKey]);
+			}
+		}
+	}
+};
+
+// TEXT / VISUAL OUTPUT RELATED //
+BADV.textvisual = {
+	_outputElement : 'div#text',
+	_nameOutputElement : 'div#name',
+	_outputingText : false,
+	
+	_aLip : [
+		'あ', 'ぁ', 'ア', 'ァ', 
+		'か', 'が', 'カ', 'ガ', 
+		'さ', 'ざ', 'サ', 'ザ', 
+		'た', 'だ', 'タ', 'ダ', 
+		'な', 'ナ', 
+		'は', 'ば', 'ぱ', 'ハ', 'バ', 'パ', 
+		'ま', 'マ', 
+		'や', 'ゃ', 'ヤ', 'ャ', 
+		'ら', 'ラ', 
+		'わ', 'ワ' 
+	],
+	_iLip : [
+		'い', 'ぃ', 'イ', 'ィ', 
+		'き', 'ぎ', 'キ', 'ギ', 
+		'し', 'じ', 'シ', 'ジ', 
+		'ち', 'ぢ', 'チ', 'ヂ', 
+		'に', 'ニ', 
+		'ひ', 'び', 'ぴ', 'ヒ', 'ビ', 'ピ', 
+		'み', 'ミ', 
+		'り', 'リ', 
+		'ゐ', 'ヰ' 
+	],
+	_uLip : [
+		'う', 'ぅ', 'ウ', 'ゥ', 
+		'く', 'ぐ', 'ク', 'グ', 
+		'す', 'ず', 'ス', 'ズ', 
+		'つ', 'づ', 'ツ', 'ヅ', 
+		'ぬ', 'ヌ', 
+		'ふ', 'ぶ', 'ぷ', 'フ', 'ブ', 'プ', 
+		'む', 'ム', 
+		'ゆ', 'ゅ', 'ユ', 'ュ', 
+		'る', 'ル' 
+	],
+	_eLip : [
+		'え', 'ぇ', 'エ', 'ェ', 
+		'け', 'げ', 'ケ', 'ゲ', 
+		'せ', 'ぜ', 'セ', 'ゼ', 
+		'て', 'で', 'テ', 'デ', 
+		'ね', 'ネ', 
+		'へ', 'べ', 'ぺ', 'ヘ', 'ベ', 'ペ', 
+		'め', 'メ', 
+		'れ', 'レ', 
+		'ゑ', 'ヱ' 
+	],
+	_oLip : [
+		'お', 'ぉ', 'オ', 'ォ', 
+		'こ', 'ご', 'コ', 'ゴ', 
+		'そ', 'ぞ', 'ソ', 'ゾ', 
+		'と', 'ど', 'ト', 'ド', 
+		'の', 'ノ', 
+		'ほ', 'ぼ', 'ぽ', 'ホ', 'ボ', 'ポ', 
+		'も', 'モ', 
+		'よ', 'ょ', 'ヨ', 'ョ', 
+		'ろ', 'ロ', 
+		'を', 'ヲ' 
+	],
+};
+BADV.typeWriter = function(inputString, lipElement) {
+	
+	var textvisual = BADV.textvisual;
+	var outputElement = textvisual._outputElement;
+	var inputLength = inputString.length;
+	var textPosition = 0;
+	var writerTimer = null;
+	
+	// BADV.backLogging(inputString); // Need to redesign
+	
+	var doLipSync = false;
+	if (lipElement !== undefined) {
+		doLipSync = true;
+	}
+	
+	textvisual._outputingText = true;
+	writerTimer = setInterval(function() {
+		// FIXME: Might hang if tag not closed
+		switch(inputLength.charAt(textPosition)) {
+			case '<':
+				// Tag Striper (example: <span>)
+				while(inputLength.charAt(textPosition) != '>') {
+					textPosition++;
+				}
+				break;
+			case '&':
+				// HTML Symbol Skipper (example: &amp;)
+				while(inputLength.charAt(textPosition) != ';') {
+					textPosition++;
+				}
+				break;
+			default:
+				// Add Position Value
+				textPosition++;
+				break;
+		}
+		
+		$(outputElement).html(inputString.substring(0, textPosition));
+		
+		// Experimental Lip Sync
+		if (doLipSync) {
+			var currentChar = inputString.charAt(textPosition);
+			var lipPos = 0;
+			var lipHeight = parseInt($(lipElement).css('height') / 6); // Auto Detect
+			if (textvisual._aLip.indexOf(currentChar) !== -1) {
+				lipPos = 1;
+			} else if (textvisual._iLip.indexOf(currentChar) !== -1) {
+				lipPos = 2;
+			} else if (textvisual._uLip.indexOf(currentChar) !== -1) {
+				lipPos = 3;
+			} else if (textvisual._eLip.indexOf(currentChar) !== -1) {
+				lipPos = 4;
+			} else if (textvisual._oLip.indexOf(currentChar) !== -1) {
+				lipPos = 5;
+			}
+			$(lipElement).css('background-position', '0px ' + (lipPos * -lipHeight) + 'px');
+		}
+		
+		// Break Condition
+		if (textPosition == inputLength || textvisual._outputingText == false) {
+			clearInterval(writerTimer);
+			$(outputElement).html(inputString.substring(0, inputLength)); // Complete text
+			textvisual._outputingText = false;
+			
+			// Show Button?
+			//showButton();
+			
+			setTimeout(function() {
+				$(lipElement).css('background-position', '0px 0px');
+			}, BADV.config._intervalPerFrame);
+			
+			// Delete variable to lessen memory consumption
+			// FIXME: (Not helping at all?, Remove?)
+			delete inputLength;
+			delete textPosition;
+			delete writerTimer;
+		}
+		
+	}, BADV.config._intervalPerFrame); // TODO: Adjustable speed?
+	
+};
+
+// ANIMATE RELATED //
+
+// ADV SYSTEM RELATED //
 
 // PLUGIN AREA //
 
