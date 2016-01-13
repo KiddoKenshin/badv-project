@@ -15,6 +15,7 @@
  * 
  * Visions:
  * Firefox OS port
+ * HTML5 Canvas Only version
  * 
  * @author KiddoKenshin at K2-R&D.com
  * @since 2012/04/01, RE: 2013/01/17, TRE: 2013/12/13
@@ -835,8 +836,698 @@ BADV.typeWriter = function(inputString, lipElement) {
 };
 
 // ANIMATE RELATED //
+BADV.animation = {
+	_idleTimers : {},
+	_positionSwitchTimers : {},
+	_eyeFrames : 3, // Make sure ALL characters have the same frames.
+	_eyeTimers : {}
+};
+
+BADV.startEye = function (eyeElement) {
+	var convertedIdForTimer = (eyeElement.replace(/\./g, '-')).replace(/\s/g, '_');
+	if (BADV.animation._eyeTimers[convertedIdForTimer] === undefined) {
+		BADV.animation._eyeTimers[convertedIdForTimer] = eyeElement; // Dummy
+		
+		function eyeWinker() { // elementId, maxFrame, heightValue) {
+			var count = 0;
+			var manipulator = 1;
+			var maxFrame = BADV.animation._eyeFrames;
+			var heightValue = parseInt($(eyeElement).css('height')) / 3;
+			var timer = setInterval(function() {
+				count += manipulator;
+				$(elementId).css('background-position', '0px ' + (count * -heightValue) + 'px');
+				if (count + 1 == maxFrame || count == 0) {
+					manipulator *= -1;
+					if (count == 0) {
+						clearInterval(timer);
+						if (BADV.animation._eyeTimers[convertedIdForTimer] !== undefined) {
+							BADV.animation._eyeTimers[convertedIdForTimer] = setTimeout(function() {
+								eyeWinker();
+							}, 500 + BADV.getRandom(4501));
+						} else {
+							BADV.consoleLogger('Eye animation for ' + elementId + ' stopped');
+						}
+					}
+				}
+			}, Math.floor((100 + BADV.getRandom(401)) / maxFrame));
+		}
+		eyeWinker();
+	} else {
+		BADV.consoleLogger('Eye animation for ' + eyeElement + ' already fired.');
+	}
+};
+
+BADV.stopEye = function(eyeElement) {
+	BADV.consoleLogger('stopping eyeWink for ' + elementId);
+	var convertedIdForTimer = (eyeElement.replace(/\./g, '-')).replace(/\s/g, '_');
+	clearTimeout(BADV.animation._eyeTimers[convertedIdForTimer]);
+	delete BADV.animation._eyeTimers[convertedIdForTimer];
+};
+
+// Work In Progress
+// BADV.startIdleAnimation = function(eyeElement, bodyElement, bodyFrames) {};
 
 // ADV SYSTEM RELATED //
+BADV.adv = {
+	_imagePath : 'images/',
+	_audioPath : 'audios/',
+	_saveEnv : 'html5storage', // Local HTML5 storage or Server side(AJAX-like)
+	 
+};
+
+BADV.generateHTML = function() {
+	// Override-able HTML generator (Simple ADV Screen)
+	
+	var body = $('body');
+	
+	var newDiv = document.createElement('div');
+	newDiv.id = 'container';
+	body.append(newDiv);
+	
+	var container = $('div#container');
+	var newDiv = document.createElement('div');
+	newDiv.id = 'contents';
+	container.append(newDiv);
+	
+	var contents = $('div#contents');
+	var newDiv = document.createElement('div');
+	newDiv.id = 'backgrounds';
+	contents.append(newDiv);
+	
+	var newDiv = document.createElement('div');
+	newDiv.id = 'foregrounds';
+	contents.append(newDiv);
+	
+	var newDiv = document.createElement('div');
+	newDiv.id = 'characters';
+	contents.append(newDiv);
+	
+	var newDiv = document.createElement('div');
+	newDiv.id = 'vfxs';
+	contents.append(newDiv);
+	
+	var newDiv = document.createElement('div');
+	newDiv.id = 'textlayer';
+	contents.append(newDiv);
+	
+	var newDiv = document.createElement('div');
+	newDiv.id = 'system';
+	contents.append(newDiv);
+	
+};
+
+/**
+ * Emulate KAG's script.
+ * KiriKiri2 / KAG3, all rights reserved to W.DEE.
+ * Copyright (C) 1997-2008 W.Dee
+ * http://kikyou.info/
+ */
+BADV.emulateKAG = function() {
+	BADV.kag = {
+		// - System Related - //
+		_autowc : function() {
+			// Auto Wait?
+		},
+		_clearsysvar : function() {
+			// Clear System's Variable (Not Used in BADV?)
+		},
+		_clickskip : function() {
+			// Click Skip
+		},
+		_close : function() {
+			// Close Window (Not used)
+		},
+		_cursor : function() {
+			// Change Cursor
+		},
+		_hidemessage : function() {
+			// Hide Message
+		},
+		_loadplugin : function() {
+			// Not supported?
+		},
+		_mappfont : function() {
+			// Map a font?
+		},
+		_nextskip : function() {
+			// Skip till next selection
+		},
+		_quake : function() {
+			// Shake the screen
+		},
+		_rclick : function() {
+			// Right Click settings
+		},
+		_resetwait : function() {
+			// Reset wait time
+		},
+		_s : function() {
+			// Stop?
+		},
+		_stopQuake : function() {
+			// Stop screen shake
+		},
+		_title : function(name) {
+			// Set title
+			$('title').html(name);
+		},
+		_wait : function() {
+			// Wait for N seconds?
+		},
+		_waitclick : function() {
+			// Wait for click
+		},
+		_wc : function() {
+			//  Wait for N count of string characters?
+		},
+		_wq : function() {
+			// Wait till Shake is over?
+		},
+		
+		
+		// - Form Interaction - //
+		_checkbox : function() {
+			// Create Checkbox
+		},
+		_commit : function() {
+			// Commit(POST)?
+		},
+		_edit : function() {
+			// Edit something?
+		},
+		
+		
+		// - Macro Related - //
+		_endmacro : function() {
+			// End of Macro
+		},
+		_erasemacro : function() {
+			// Erase / Delete Macro
+		},
+		_macro : function() {
+			// Create Macro
+		},
+		
+		
+		// - Message Window Related - //
+		_cancelautomode : function() {
+			// Stop Auto Mode
+		},
+		_cancelskip : function() {
+			// Stop Skip Mode
+		},
+		_ch : function() {
+			// Show Message?
+		},
+		_cm : function() {
+			// Clear Message
+		},
+		_ct : function() {
+			// Clear Message Layers
+		},
+		_current : function() {
+			// Set current message layer
+		},
+		_deffont : function() {
+			// Default Font
+		},
+		_defstyle : function() {
+			// Default Style
+		},
+		_delay : function() {
+			// Text Speed?
+		},
+		_endindent : function() {
+			// End of Text Indent?
+		},
+		_endnowait : function() {
+			// End of No Wait?
+		},
+		_er : function() {
+			// Erase Message layer text
+		},
+		_font : function() {
+			// Set Font?
+		},
+		_glyph : function() {
+			// Set the character for the key wait indicator
+		},
+		_graph : function() {
+			// Display inline image
+		},
+		_hch : function() {
+			// Normal text in Vertical Text mode(Not use)
+		},
+		_indent : function() {
+			// Indent
+		},
+		_l : function() {
+			// The Key wait
+		},
+		_locate : function() {
+			// Set the position to display text
+		},
+		_locklink : function() {
+			// Lock link?
+		},
+		_nowait : function() {
+			// No wait
+		},
+		_p : function() {
+			// Page change
+		},
+		_position : function() {
+			// Message layer attribute?
+		},
+		_r : function() {
+			// Return
+		},
+		_resetfont : function() {
+			// Reset font to default
+		},
+		_resetstyle : function() {
+			// Reset style to default
+		},
+		_ruby : function() {
+			// Set ruby to text
+		},
+		_style : function() {
+			// Set Style
+		},
+		_unlocklink : function() {
+			// Unlock Link?
+		},
+		
+		
+		// - Message History Related - //
+		_endhact : function() {
+			// End Message History Action?
+		},
+		_hact : function() {
+			// Message History Action?
+		},
+		_history : function() {
+			// Message History Setting?
+		},
+		_hr : function() {
+			// History's Message new line
+		},
+		_showhistory : function() {
+			// Show Message History
+		},
+		
+		
+		// - Label/Scene Jump Related - //
+		_button : function() {
+			// Create graphical button?
+		},
+		_call : function() {
+			// Call Sub Routine?
+		},
+		_cclick : function() {
+			// Cancel 'Click Wait'
+		},
+		_click : function() {
+			// Click Jump?
+		},
+		_ctimeout : function() {
+			// Cancel Timeout
+		},
+		_cwheel : function() {
+			// Cancel wheel wait
+		},
+		_endlink : function() {
+			// End Hyperlink(</a> tag?)
+		},
+		_jump : function() {
+			// Scenario Jump
+		},
+		_link : function() {
+			// Hyperlink (<a> tag?)
+		},
+		_return : function() {
+			// Return from Sub Routine
+		},
+		_timeout : function() {
+			// Timeout Jump?
+		},
+		_wheel : function() {
+			// Wheel Jump?
+		},
+		
+		
+		// - Layer Related - //
+		_animstart : function() {
+			// Start Animation
+		},
+		_animstop : function() {
+			// Stop Animation
+		},
+		_backlay : function() {
+			// Backup Layer?
+		},
+		_copylay : function() {
+			// Copy Layer?
+		},
+		_freeimage : function() {
+			// Delete image from layer
+		},
+		_image : function() {
+			// Load Image
+		},
+		_img : function() {
+			// Same as Above
+		},
+		_laycount : function() {
+			// Edit total number of layers?
+		},
+		_layopt : function() {
+			// Apply layer option
+		},
+		_mapaction : function() {
+			// Mapping action (Not Supported ><)
+		},
+		_mapdisable : function() {
+			// Disable clickable map
+		},
+		_mapimage : function() {
+			// Mapping image?
+		},
+		_move : function() {
+			// Move Layer?
+		},
+		_pimage : function() {
+			// Partial Image load?
+		},
+		_ptext : function() {
+			// Paste text to layer?
+		},
+		_stopmove : function() {
+			// Stop Move Layer
+		},
+		_stoptrans : function() {
+			// Stop Layer Transition
+		},
+		_trans : function() {
+			// Start Layer Transition
+		},
+		_wa : function() {
+			// Wait Animation ends
+		},
+		_wm : function() {
+			// Wait Move ends
+		},
+		_wt : function() {
+			// Wait transition end
+		},
+		
+		
+		// - Audio/Video Related - //
+		_bgmopt : function() {
+			// Set BGM Options
+		},
+		_cancelvideoevent : function() {
+			// Cancel Video?
+		},
+		_cancelvideosegloop : function() {
+			// Cancel Video loop?
+		},
+		_clearbgmlabel : function() {
+			// Clear BGM label?
+		},
+		_clearbgmstop : function() {
+			// Clear BGM stop?
+		},
+		_clearvideolayer : function() {
+			// Clear video layer
+		},
+		_fadebgm : function() {
+			// BGM Fade
+		},
+		_fadeinbgm : function() {
+			// Fade In BGM
+		},
+		_fadeinse : function() {
+			// Fade In SE
+		},
+		_fadeoutbgm : function() {
+			// Fade Out BGM
+		},
+		_fadeoutse : function() {
+			// Fade Out SE
+		},
+		_fadepausebgm : function() {
+			// Fade and pause BGM
+		},
+		_fadese : function() {
+			// Fade SE
+		},
+		_openvideo : function() {
+			// Open Video / SWF
+		},
+		_pausebgm : function() {
+			// Pause BGM
+		},
+		_playbgm : function() {
+			// Play BGM
+		},
+		_playse : function() {
+			// Play SE
+		},
+		_playvideo : function() {
+			// Play Video
+		},
+		_preparevideo : function() {
+			// Prepare Video?
+		},
+		_resumebgm : function() {
+			// Resume BGM
+		},
+		_resumevideo : function() {
+			// Resume Video
+		},
+		_rewindvideo : function() {
+			// Set Video playtime to 0?
+		},
+		_seopt : function() {
+			// Set SE Option
+		},
+		_setbgmlabel : function() {
+			// Set BGM Label
+		},
+		_setbgmstop : function() {
+			// Set Stop BGM Event?
+		},
+		_stopbgm : function() {
+			// Stop BGM
+		},
+		_stopse : function() {
+			// Stop SE
+		},
+		_stopvideo : function() {
+			// Stop Video
+		},
+		_video : function() {
+			// Set Video Options
+		},
+		_videoevent : function() {
+			// Video Event?
+		},
+		_videolayer : function() {
+			// Video Layer Settings
+		},
+		_videosegloop : function() {
+			// Set Video Loop
+		},
+		_wb : function() {
+			// Wait for BGM Fade
+		},
+		_wf : function() {
+			// Wait for SE Fade
+		},
+		_wl : function () {
+			// Wait for BGM ends
+		},
+		_wp : function() {
+			// Wait for Video Period? ends
+		},
+		_ws : function() {
+			// Wait for SE ends
+		},
+		_wv : function() {
+			// Wait for Video ends
+		},
+		xchgbgm : function() {
+			// Crossfade BGMs
+		},
+		
+		
+		// - Variable/Misc System Related - //
+		_clearvar : function() {
+			// Clear game variables
+		},
+		_else : function() {
+			// that ELSE
+		},
+		_elsif : function() {
+			// That ELSE IF
+		},
+		_emb : function() {
+			// ?????
+		},
+		_endif : function() {
+			// That END IF
+		},
+		_endignore : function() {
+			// End of IGNORE
+		},
+		_endscript : function() {
+			// End of Script
+		},
+		_if : function() {
+			// That IF
+		},
+		_ignore : function() {
+			// IF That operates opposite way (Execute on FALSE Statement)
+		},
+		_input : function() {
+			// Input String
+		},
+		_iscript : function() {
+			// Begin Script
+		},
+		_trace : function() {
+			// Do Console.log
+		},
+		_waiting : function() {
+			// Wait for Trigger
+		},
+		
+		
+		// - Savepoint/Savestate Related - //
+		_copybookmark : function() {
+			// Copy savestate
+		},
+		_disablestore : function() {
+			// Temporary Disable Save feature
+		},
+		_erasebookmark : function() {
+			// Delete savestate
+		},
+		_goback : function() {
+			// Go back???
+		},
+		_gotostart : function() {
+			// Back to start???
+		},
+		_load : function() {
+			// Load savestate
+		},
+		_locksnapshot : function() {
+			// Lock Snapshot?
+		},
+		_record : function() {
+			// Save read-ed scripts
+		},
+		_save : function() {
+			// Save savestate
+		},
+		_startanchor : function() {
+			// Option for return to start?
+		},
+		_store : function() {
+			// Settings for savestate
+		},
+		_tempload : function() {
+			// Load data from memory (Quick Load)
+		},
+		_tempsave : function() {
+			// Save data to memory (Quick Save)
+		},
+		_unlocksnapshot : function() {
+			// Unlock Snapshot
+		}
+	};
+	
+	BADV.kag.labelPositions = {};
+	
+	BADV.kag.examineScript = function(string, lineOfString) {
+		var firstLetter = string.indexOf(0);
+		var lastLetter = string.indexOf(-1);
+		
+		if ((firstLetter == '[' && lastLetter == ']') || firstLetter == '@') {
+			// Check function
+		} else if (firstLetter == ';') {
+			// It just comment, skip
+		} else if (firstLetter == '*') {
+			// Label (For chapter jump purpose)
+		} else {
+			// Normal Text script
+		}
+	}
+	
+	// Just for checking out if the scripts are runnable.
+	BADV.kag.checkAvailability = function(dataChunk) {
+		// dataChunk = dataChunk.replace(/^;.*/g, ''); // Remove the comment line out
+		dataChunk = dataChunk.replace(/\t/g, ''); // Remove tabs out
+		dataChunk = dataChunk.replace(/;.*/mg, ''); // Remove the comment line out
+		dataChunk = dataChunk.replace(/\r/g, ''); // Make it a unix format (Remove Carriage return, Line feed only!)
+		dataChunk = dataChunk.replace(/\[\[/g, '&#91;'); // Convert [[ to html entity (prevent it to act like a code)
+		
+		dataChunk = dataChunk.replace(/\]\[/g, '\]\n\['); // Separate ][ with line breaks (to act as command code)
+		dataChunk = dataChunk.replace(/\[([^\[]*)$$/g, '\n\[\$1'); // Only line break [ if [*] matches at the end of string (Separate from normal text)
+		
+		dataChunk = dataChunk.replace(/\n\n\n\n/g, '\n'); // Convert 4 new lines to 1 (Most probably blank lines)
+		dataChunk = dataChunk.replace(/\n\n\n/g, '\n'); // Convert 3 new lines to 1 (Most probably blank lines)
+		dataChunk = dataChunk.replace(/\n\n/g, '\n'); // Convert 2 new lines to 1 (Most probably blank lines)
+		
+		// Just a small manner, remove the 1st line if its a blank line
+		if (dataChunk.charAt(0) == '\n') {
+			dataChunk = dataChunk.slice(1);
+		}
+		
+		BADV.consoleLogger(dataChunk);
+		
+		var strings = dataChunk.split('\n'); // Split it by line break (line feed)
+		var totalLines = strings.length;
+		
+		for (var i = 0; i < totalLines; i++) {
+			var firstLetter = strings[i].charAt(0);
+			var lastLetter = strings[i].charAt(strings[i].length - 1);
+			if ((firstLetter == '[' && lastLetter == ']') || firstLetter == '@') {
+				
+				// Check function
+				var code = '';
+				if ((firstLetter == '[' && lastLetter == ']')) {
+					code = strings[i].substring(1, strings[i].length - 1);
+				} else if (firstLetter == '@') {
+					code = strings[i].slice(1);
+				}
+				
+				var cwitharg = code.split(' ');
+				if (eval('typeof(BADV.kag._' + cwitharg[0] + ')') == 'undefined') {
+					// Throw Error, no command available
+					BADV.consoleLogger(cwitharg[0] + ' is Not Available.');
+					throw new Error(cwitharg[0] + ' is Not Available.');
+				} else {
+					BADV.consoleLogger(cwitharg[0] + ' is Available.');
+				}
+				
+			} else if (firstLetter == '*') {
+				// Label (For chapter jump purpose)
+				BADV.consoleLogger('Labeling: ' + strings[i]);
+			} else {
+				// Normal Text script
+				if (strings[i] == '') {
+					BADV.consoleLogger('Blank line. Skip.');
+				} else {
+					BADV.consoleLogger('Normal Text Script: ' + strings[i]);
+				}
+			}
+		}
+	};
+	
+};
 
 // PLUGIN AREA //
 
